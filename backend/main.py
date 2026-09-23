@@ -7,14 +7,18 @@ from pypinyin import lazy_pinyin, Style
 from snownlp import SnowNLP
 from storage import init_db, save_record, get_history
 from datetime import datetime, timezone
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()                        # ← 读同目录下的 .env
+
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS").split(",")
+
 
 init_db()                                               # ← 这一行：启动时确保表在
 
 app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-)
 
 def get_session_id(request: Request, response: Response) -> str:
     sid = request.cookies.get("session_id")      # 先看有没有纸条
@@ -46,7 +50,7 @@ class AnalyzeRequest(BaseModel):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET", "POST"],
     allow_credentials=True,
 )
@@ -82,6 +86,5 @@ def analyze(req: AnalyzeRequest, request: Request, response: Response):
 def history(request: Request, response: Response, limit: int = 10):
     sid = get_session_id(request, response)
     return get_history(sid, limit)    # 只回这个会话自己的
-
 
 
